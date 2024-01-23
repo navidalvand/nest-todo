@@ -11,19 +11,54 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto) {
     try {
-      return createUserDto;
-    } catch (err) {}
+      const findUser = await this.userModel.findOne({
+        $or: [
+          { username: createUserDto.username },
+          { email: createUserDto.email },
+        ],
+      });
+
+      if (createUserDto.password !== createUserDto.confirm_password)
+        throw {
+          message: 'badRequest',
+          statusCode: 400,
+          fullMessage: `"password" and "confirm_password" fields must be the same`,
+        };
+
+      console.log(findUser);
+      if (findUser) {
+        if (findUser.email === createUserDto.email)
+          throw {
+            message: 'email is already in use by someone else',
+            statusCode: 400,
+          };
+
+        if (findUser.username === createUserDto.username)
+          throw {
+            message: 'username is already in use by someone else',
+            statusCode: 400,
+          };
+
+        throw {
+          message: 'internal server error',
+          statusCode: 500,
+        };
+      }
+
+      const createUser = await this.userModel.create(createUserDto);
+
+      console.log(createUser);
+
+      return createUser;
+    } catch (err) {
+      throw err;
+    }
   }
 
   async login(loginUserDto: LoginUserDto) {
     try {
-      let user = await this.userModel.findOne({ email: loginUserDto.email });
-      if (!user)
-        user = await this.userModel.create({ email: loginUserDto.email });
-      return user;
     } catch (err) {
-      console.log(err);
-      return err;
+      throw err;
     }
   }
 }

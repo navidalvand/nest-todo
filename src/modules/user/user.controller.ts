@@ -1,4 +1,10 @@
-import { Controller, Post, Body, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,11 +16,13 @@ export class UserController {
   @Post('/create')
   async create(@Body() createUserDto: CreateUserDto) {
     try {
-      return this.userService.create(createUserDto);
+      const result = await this.userService.create(createUserDto);
+      return result;
     } catch (err) {
       return new HttpException(
-        err.message || 'internal server error',
-        err.statusCode || 500,
+        { message: err.message, description: err.description } ||
+          'internal server error',
+        err.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

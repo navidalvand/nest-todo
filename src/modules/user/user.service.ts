@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/schemas/user.schema';
@@ -21,33 +21,32 @@ export class UserService {
       if (createUserDto.password !== createUserDto.confirm_password)
         throw {
           message: 'badRequest',
-          statusCode: 400,
-          fullMessage: `"password" and "confirm_password" fields must be the same`,
+          statusCode: HttpStatus.BAD_REQUEST,
+          description: `"password" and "confirm_password" fields must be the same`,
         };
 
-      console.log(findUser);
       if (findUser) {
         if (findUser.email === createUserDto.email)
           throw {
-            message: 'email is already in use by someone else',
-            statusCode: 400,
+            message: 'badRequest',
+            statusCode: HttpStatus.BAD_REQUEST,
+            description: 'email is already in use by someone else',
           };
 
         if (findUser.username === createUserDto.username)
           throw {
-            message: 'username is already in use by someone else',
-            statusCode: 400,
+            message: 'badRequest',
+            statusCode: HttpStatus.BAD_REQUEST,
+            description: 'username is already in use by someone else',
           };
 
         throw {
           message: 'internal server error',
-          statusCode: 500,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         };
       }
 
       const createUser = await this.userModel.create(createUserDto);
-
-      console.log(createUser);
 
       return createUser;
     } catch (err) {
@@ -57,6 +56,7 @@ export class UserService {
 
   async login(loginUserDto: LoginUserDto) {
     try {
+      return loginUserDto;
     } catch (err) {
       throw err;
     }

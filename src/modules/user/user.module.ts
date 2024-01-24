@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { CheckLogin } from 'src/middleware/check-login';
 
 @Module({
   imports: [
@@ -16,4 +17,8 @@ import { User, UserSchema } from 'src/schemas/user.schema';
   controllers: [UserController],
   providers: [UserService],
 })
-export class UserModule {}
+export class UserModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CheckLogin).forRoutes('user');
+  }
+}

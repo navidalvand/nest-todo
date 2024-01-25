@@ -5,12 +5,16 @@ import { User } from 'src/schemas/user.schema';
 import { Model } from 'mongoose';
 import { LoginUserDto } from '../../dto/login-user.dto';
 import * as bcrypt from 'bcrypt';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private authService: AuthService,
+  ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, response) {
     try {
       const { confirm_password, password, username, email } = createUserDto;
 
@@ -51,6 +55,10 @@ export class UserService {
         password: await this.hashPassword(password),
         username,
       });
+
+      const token = this.authService.signToken(username);
+      console.log(token);
+      response.cookie('token', token);
 
       return createUser;
     } catch (err) {

@@ -1,10 +1,11 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { UserService } from './services/user/user.service';
 import { UserController } from './user.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
-import { CheckLogin } from 'src/middleware/check-login';
 import { AuthService } from './services/auth/auth.service';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -14,12 +15,14 @@ import { AuthService } from './services/auth/auth.service';
         schema: UserSchema,
       },
     ]),
+    ConfigModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.SECRET_KEY,
+      signOptions: { expiresIn: '24h' },
+    }),
   ],
   controllers: [UserController],
   providers: [UserService, AuthService],
 })
-export class UserModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CheckLogin).forRoutes('user');
-  }
-}
+export class UserModule {}

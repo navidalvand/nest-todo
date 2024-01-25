@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
+import { CreateTodoDto } from '../dto/create-todo.dto';
+import { UpdateTodoDto } from '../dto/update-todo.dto';
 
 @Injectable()
 export class TodoService {
   create(createTodoDto: CreateTodoDto) {
-    return 'This action adds a new todo';
+    return createTodoDto;
   }
 
   findAll() {
@@ -17,7 +17,7 @@ export class TodoService {
   }
 
   update(id: number, updateTodoDto: UpdateTodoDto) {
-    return `This action updates a #${id} todo`;
+    return `This action updates a #${id} ${updateTodoDto} todo`;
   }
 
   remove(id: number) {

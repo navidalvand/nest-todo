@@ -1,24 +1,25 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from '../../dto/create-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'src/schemas/user.schema';
+import { JwtService } from '@nestjs/jwt';
+import { DatabaseService } from '../database/database.service';
 import { Model } from 'mongoose';
-import { LoginUserDto } from '../../dto/login-user.dto';
+import { User } from 'src/schemas/user.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
-import { AuthService } from '../auth/auth.service';
 
 @Injectable()
-export class UserService {
+export class AuthService {
   constructor(
+    private jwtService: JwtService,
     @InjectModel(User.name) private userModel: Model<User>,
-    private authService: AuthService,
+    private databaseService: DatabaseService,
   ) {}
 
   async create(createUserDto: CreateUserDto, response) {
     try {
       const { confirm_password, password, username, email } = createUserDto;
 
-      const findUser = await this.findOne({
+      const findUser = await this.databaseService.findOne(this.userModel, {
         $or: [{ username }, { email }],
       });
 
@@ -56,7 +57,7 @@ export class UserService {
         username,
       });
 
-      const token = this.authService.signToken(username);
+      const token = await this.signToken(username);
       console.log(token);
       response.cookie('token', token);
 
@@ -66,9 +67,17 @@ export class UserService {
     }
   }
 
-  async login(loginUserDto: LoginUserDto) {
+  async signToken(username: string): Promise<{ access_token: string }> {
     try {
-      return loginUserDto;
+      const user = await this.databaseService.findOne(this.userModel, {
+        username,
+      });
+
+      const payload = { id: user._id, username: user.username };
+      console.log(payload);
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+      };
     } catch (err) {
       throw err;
     }
@@ -88,15 +97,6 @@ export class UserService {
     try {
       const isMatch = await bcrypt.compare(password, hash);
       return isMatch;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  async findOne(options): Promise<User | any> {
-    try {
-      const findUser = await this.userModel.findOne(options);
-      return findUser ? findUser : null;
     } catch (err) {
       throw err;
     }
